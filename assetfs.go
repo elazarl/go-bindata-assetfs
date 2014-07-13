@@ -125,10 +125,6 @@ type AssetFS struct {
 	Prefix string
 }
 
-func NewAssetFS(asset func(string) ([]byte, error), assetDir func(string) ([]string, error)) *AssetFS {
-	return &AssetFS{asset, assetDir, "/"}
-}
-
 func (fs *AssetFS) Open(name string) (http.File, error) {
 	name = path.Join(fs.Prefix, name)
 	if len(name) > 0 && name[0] == '/' {
