@@ -13,6 +13,10 @@ import (
 	"time"
 )
 
+var (
+	fileTimestamp = time.Now()
+)
+
 // FakeFile implements os.FileInfo interface for a given path and size
 type FakeFile struct {
 	// Path is the path of this file
@@ -37,7 +41,7 @@ func (f *FakeFile) Mode() os.FileMode {
 }
 
 func (f *FakeFile) ModTime() time.Time {
-	return time.Unix(0, 0)
+	return fileTimestamp
 }
 
 func (f *FakeFile) Size() int64 {
