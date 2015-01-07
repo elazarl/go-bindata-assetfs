@@ -3,7 +3,6 @@ package assetfs
 import (
 	"bytes"
 	"errors"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -102,7 +101,6 @@ func NewAssetDirectory(name string, children []string, fs *AssetFS) *AssetDirect
 }
 
 func (f *AssetDirectory) Readdir(count int) ([]os.FileInfo, error) {
-	fmt.Println(f, count)
 	if count <= 0 {
 		return f.Children, nil
 	}
