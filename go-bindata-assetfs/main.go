@@ -3,10 +3,11 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"io"
+	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
-	"strings"
 )
 
 func main() {
@@ -20,37 +21,76 @@ func main() {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
-		os.Exit(1)
+		log.Printf("Error running go-bindata: %v", err)
+		os.Exit(2)
 	}
 	in, err := os.Open("bindata.go")
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "Cannot read 'bindata.go'", err)
-		return
+		log.Printf("Cannot read 'bindata.go': %v", err)
+		os.Exit(3)
 	}
 	out, err := os.Create("bindata_assetfs.go")
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "Cannot write 'bindata_assetfs.go'", err)
-		return
+		log.Printf("Cannot write 'bindata_assetfs.go': %v", err)
+		os.Exit(4)
 	}
+	r := bufio.NewReader(in)
+	w := bufio.NewWriter(out)
 	defer in.Close()
-	defer out.Close()
-	scanner := bufio.NewScanner(in)
-	for scanner.Scan() {
-		line := scanner.Text()
-		fmt.Fprintln(out, line)
-		if strings.HasPrefix(line, "import (") {
-			fmt.Fprintln(out, "\t\"github.com/elazarl/go-bindata-assetfs\"")
+	defer func() {
+		w.Flush()
+		out.Close()
+	}()
+	importPrefix := "import ("
+LinesLoop:
+	for {
+		isImport := false
+		b, err := r.Peek(len(importPrefix))
+		if err == nil {
+			isImport = string(b) == importPrefix
+		}
+		for {
+			c, _, err := r.ReadRune()
+			if err != nil {
+				if err == io.EOF {
+					break LinesLoop
+				} else {
+					log.Printf("Unable to read from bindata file: %v", err)
+					os.Exit(5)
+				}
+			}
+			_, err = w.WriteRune(c)
+			if err != nil {
+				log.Printf("Unable to write to assetfs file: %v", err)
+				os.Exit(6)
+			}
+			if c == '\n' {
+				if isImport {
+					_, err = fmt.Fprintf(w, "\t\"github.com/elazarl/go-bindata-assetfs\"\n")
+					if err != nil {
+						log.Printf("Unable to write import to assetfs out: %v", err)
+						os.Exit(7)
+					}
+				}
+				break
+			}
 		}
 	}
-	fmt.Fprintln(out, `
+
+	_, err = fmt.Fprintln(w, `
 func assetFS() *assetfs.AssetFS {
 	for k := range _bintree.Children {
 		return &assetfs.AssetFS{Asset: Asset, AssetDir: AssetDir, Prefix: k}
 	}
 	panic("unreachable")
 }`)
+	if err != nil {
+		log.Printf("Unable to write assetFS function to assetfs out: %v", err)
+		os.Exit(8)
+	}
 	if err := os.Remove("bindata.go"); err != nil {
-		fmt.Fprintln(os.Stderr, "Cannot remove bindata_assetfs.go", err)
+		log.Printf("Cannot remove bindata_assetfs.go: %v", err)
+		os.Exit(9)
 	}
 }
 
