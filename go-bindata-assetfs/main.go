@@ -2,11 +2,11 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
-	"strings"
 )
 
 func main() {
@@ -34,12 +34,17 @@ func main() {
 	}
 	defer in.Close()
 	defer out.Close()
-	scanner := bufio.NewScanner(in)
-	for scanner.Scan() {
-		line := scanner.Text()
-		fmt.Fprintln(out, line)
-		if strings.HasPrefix(line, "import (") {
+	r := bufio.NewReader(in)
+	done := false
+	for line, isPrefix, err := r.ReadLine(); err == nil; line, isPrefix, err = r.ReadLine() {
+		line = append(line, '\n')
+		if _, err := out.Write(line); err != nil {
+			fmt.Fprintln(os.Stderr, "Cannot write to 'bindata_assetfs.go'", err)
+			return
+		}
+		if !done && !isPrefix && bytes.HasPrefix(line, []byte("import (")) {
 			fmt.Fprintln(out, "\t\"github.com/elazarl/go-bindata-assetfs\"")
+			done = true
 		}
 	}
 	fmt.Fprintln(out, `
