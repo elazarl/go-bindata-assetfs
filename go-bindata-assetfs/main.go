@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-	if !isInPath("go-bindata") {
+	if !isInPath("go-bindata") && !isInPath("go-bindata.exe") {
 		fmt.Println("Cannot find go-bindata executable in path")
 		fmt.Println("Maybe you need: go get github.com/elazarl/go-bindata-assetfs/...")
 		os.Exit(1)
@@ -32,8 +32,6 @@ func main() {
 		fmt.Fprintln(os.Stderr, "Cannot write 'bindata_assetfs.go'", err)
 		return
 	}
-	defer in.Close()
-	defer out.Close()
 	r := bufio.NewReader(in)
 	done := false
 	for line, isPrefix, err := r.ReadLine(); err == nil; line, isPrefix, err = r.ReadLine() {
@@ -47,21 +45,30 @@ func main() {
 			done = true
 		}
 	}
+	/* Note by khaos: Prefix omitted due to strange behaviour. */
 	fmt.Fprintln(out, `
 func assetFS() *assetfs.AssetFS {
-	for k := range _bintree.Children {
-		return &assetfs.AssetFS{Asset: Asset, AssetDir: AssetDir, Prefix: k}
+	for _ = range _bintree.Children {
+		return &assetfs.AssetFS{Asset: Asset, AssetDir: AssetDir, Prefix: ""}
 	}
 	panic("unreachable")
 }`)
+	// Close files BEFORE remove calls (don't use defer).
+	in.Close()
+	out.Close()
 	if err := os.Remove("bindata.go"); err != nil {
 		fmt.Fprintln(os.Stderr, "Cannot remove bindata_assetfs.go", err)
 	}
 }
 
 func isInPath(filename string) bool {
+	// First, check the same directory.
+	if _, err := os.Stat(filename); err == nil {
+		return true
+	}
+	// Then other dirs.
 	for _, path := range filepath.SplitList(os.Getenv("PATH")) {
-		if _, err := os.Stat(filepath.Join(path, "go-bindata")); err == nil {
+		if _, err := os.Stat(filepath.Join(path, filename)); err == nil {
 			return true
 		}
 	}
