@@ -8,6 +8,8 @@ import (
 	"os/exec"
 )
 
+const outfile = "bindata.go"
+
 func main() {
 	if _, err := exec.LookPath("go-bindata"); err != nil {
 		fmt.Println("Cannot find go-bindata executable in path")
@@ -21,7 +23,7 @@ func main() {
 	if err := cmd.Run(); err != nil {
 		os.Exit(1)
 	}
-	in, err := os.Open("bindata.go")
+	in, err := os.Open(outfile)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "Cannot read 'bindata.go'", err)
 		return
@@ -54,7 +56,7 @@ func assetFS() *assetfs.AssetFS {
 	// Close files BEFORE remove calls (don't use defer).
 	in.Close()
 	out.Close()
-	if err := os.Remove("bindata.go"); err != nil {
-		fmt.Fprintln(os.Stderr, "Cannot remove bindata_assetfs.go", err)
+	if err := os.Remove(outfile); err != nil {
+		fmt.Fprintln(os.Stderr, "Cannot remove", outfile, err)
 	}
 }
