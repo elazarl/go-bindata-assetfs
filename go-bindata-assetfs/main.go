@@ -6,11 +6,10 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"path/filepath"
 )
 
 func main() {
-	if !isInPath("go-bindata") {
+	if _, err := exec.LookPath("go-bindata"); err != nil {
 		fmt.Println("Cannot find go-bindata executable in path")
 		fmt.Println("Maybe you need: go get github.com/elazarl/go-bindata-assetfs/...")
 		os.Exit(1)
@@ -32,8 +31,6 @@ func main() {
 		fmt.Fprintln(os.Stderr, "Cannot write 'bindata_assetfs.go'", err)
 		return
 	}
-	defer in.Close()
-	defer out.Close()
 	r := bufio.NewReader(in)
 	done := false
 	for line, isPrefix, err := r.ReadLine(); err == nil; line, isPrefix, err = r.ReadLine() {
@@ -54,16 +51,10 @@ func assetFS() *assetfs.AssetFS {
 	}
 	panic("unreachable")
 }`)
+	// Close files BEFORE remove calls (don't use defer).
+	in.Close()
+	out.Close()
 	if err := os.Remove("bindata.go"); err != nil {
 		fmt.Fprintln(os.Stderr, "Cannot remove bindata_assetfs.go", err)
 	}
-}
-
-func isInPath(filename string) bool {
-	for _, path := range filepath.SplitList(os.Getenv("PATH")) {
-		if _, err := os.Stat(filepath.Join(path, "go-bindata")); err == nil {
-			return true
-		}
-	}
-	return false
 }
