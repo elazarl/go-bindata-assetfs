@@ -8,7 +8,7 @@ import (
 	"os/exec"
 )
 
-const outfile = "bindata.go"
+const bindatafile = "bindata.go"
 
 func main() {
 	if _, err := exec.LookPath("go-bindata"); err != nil {
@@ -23,9 +23,9 @@ func main() {
 	if err := cmd.Run(); err != nil {
 		os.Exit(1)
 	}
-	in, err := os.Open(outfile)
+	in, err := os.Open(bindatafile)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "Cannot read 'bindata.go'", err)
+		fmt.Fprintln(os.Stderr, "Cannot read ", bindatafile, err)
 		return
 	}
 	out, err := os.Create("bindata_assetfs.go")
@@ -56,7 +56,7 @@ func assetFS() *assetfs.AssetFS {
 	// Close files BEFORE remove calls (don't use defer).
 	in.Close()
 	out.Close()
-	if err := os.Remove(outfile); err != nil {
-		fmt.Fprintln(os.Stderr, "Cannot remove", outfile, err)
+	if err := os.Remove(bindatafile); err != nil {
+		fmt.Fprintln(os.Stderr, "Cannot remove", bindatafile, err)
 	}
 }
