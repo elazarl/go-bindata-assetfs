@@ -25,7 +25,7 @@ func main() {
 	}
 	in, err := os.Open(bindatafile)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "Cannot read ", bindatafile, err)
+		fmt.Fprintln(os.Stderr, "Cannot read", bindatafile, err)
 		return
 	}
 	out, err := os.Create("bindata_assetfs.go")
