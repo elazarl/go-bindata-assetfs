@@ -24,6 +24,8 @@ type FakeFile struct {
 	Dir bool
 	// Len is the length of the fake file, zero if it is a directory
 	Len int64
+	// Debug causes ModTime() to return time.Now() so files are read from filesystem
+	Debug bool
 }
 
 func (f *FakeFile) Name() string {
@@ -40,6 +42,9 @@ func (f *FakeFile) Mode() os.FileMode {
 }
 
 func (f *FakeFile) ModTime() time.Time {
+	if f.Debug {
+		return time.Now()
+	}
 	return fileTimestamp
 }
 
@@ -66,7 +71,14 @@ func NewAssetFile(name string, content []byte) *AssetFile {
 	return &AssetFile{
 		bytes.NewReader(content),
 		ioutil.NopCloser(nil),
-		FakeFile{name, false, int64(len(content))}}
+		FakeFile{Path: name, Dir: false, Len: int64(len(content))}}
+}
+
+func NewAssetDebugFile(name string, content []byte) *AssetFile {
+	return &AssetFile{
+		bytes.NewReader(content),
+		ioutil.NopCloser(nil),
+		FakeFile{Path: name, Dir: false, Len: int64(len(content)), Debug: true}}
 }
 
 func (f *AssetFile) Readdir(count int) ([]os.FileInfo, error) {
@@ -88,13 +100,13 @@ func NewAssetDirectory(name string, children []string, fs *AssetFS) *AssetDirect
 	fileinfos := make([]os.FileInfo, 0, len(children))
 	for _, child := range children {
 		_, err := fs.AssetDir(filepath.Join(name, child))
-		fileinfos = append(fileinfos, &FakeFile{child, err == nil, 0})
+		fileinfos = append(fileinfos, &FakeFile{Path: child, Dir: err == nil, Len: 0})
 	}
 	return &AssetDirectory{
 		AssetFile{
 			bytes.NewReader(nil),
 			ioutil.NopCloser(nil),
-			FakeFile{name, true, 0},
+			FakeFile{Path: name, Dir: true, Len: 0},
 		},
 		0,
 		fileinfos}
@@ -125,6 +137,8 @@ type AssetFS struct {
 	AssetDir func(path string) ([]string, error)
 	// Prefix would be prepended to http requests
 	Prefix string
+	// Debug causes files to read from filesystem
+	Debug bool
 }
 
 func (fs *AssetFS) Open(name string) (http.File, error) {
@@ -138,6 +152,9 @@ func (fs *AssetFS) Open(name string) (http.File, error) {
 	b, err := fs.Asset(name)
 	if err != nil {
 		return nil, err
+	}
+	if fs.Debug {
+		return NewAssetDebugFile(name, b), nil
 	}
 	return NewAssetFile(name, b), nil
 }

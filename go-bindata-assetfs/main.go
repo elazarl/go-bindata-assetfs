@@ -3,12 +3,32 @@ package main
 import (
 	"bufio"
 	"bytes"
+	"flag"
 	"fmt"
 	"os"
 	"os/exec"
+	"strings"
 )
 
 const bindatafile = "bindata.go"
+
+func isDebug(args []string) bool {
+	flagset := flag.NewFlagSet("", flag.ContinueOnError)
+	debug := flagset.Bool("debug", false, "")
+
+	debugArgs := make([]string, 0)
+	for _, arg := range args {
+		if strings.HasPrefix(arg, "-debug") {
+			debugArgs = append(debugArgs, arg)
+		}
+	}
+
+	flagset.Parse(debugArgs)
+	if debug == nil {
+		return false
+	}
+	return *debug
+}
 
 func main() {
 	if _, err := exec.LookPath("go-bindata"); err != nil {
@@ -46,13 +66,14 @@ func main() {
 			done = true
 		}
 	}
-	fmt.Fprintln(out, `
+	fmt.Fprintf(out, `
 func assetFS() *assetfs.AssetFS {
 	for k := range _bintree.Children {
-		return &assetfs.AssetFS{Asset: Asset, AssetDir: AssetDir, Prefix: k}
+		return &assetfs.AssetFS{Asset: Asset, AssetDir: AssetDir, Prefix: k, Debug: %t}
 	}
 	panic("unreachable")
-}`)
+}
+`, isDebug(os.Args[1:]))
 	// Close files BEFORE remove calls (don't use defer).
 	in.Close()
 	out.Close()
