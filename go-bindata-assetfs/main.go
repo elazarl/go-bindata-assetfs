@@ -55,7 +55,9 @@ func main() {
 	r := bufio.NewReader(in)
 	done := false
 	for line, isPrefix, err := r.ReadLine(); err == nil; line, isPrefix, err = r.ReadLine() {
-		line = append(line, '\n')
+		if !isPrefix {
+			line = append(line, '\n')
+		}
 		if _, err := out.Write(line); err != nil {
 			fmt.Fprintln(os.Stderr, "Cannot write to 'bindata_assetfs.go'", err)
 			return
