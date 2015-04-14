@@ -73,6 +73,10 @@ func (f *AssetFile) Readdir(count int) ([]os.FileInfo, error) {
 	return nil, errors.New("not a directory")
 }
 
+func (f *AssetFile) Size() int64 {
+	return f.FakeFile.Size()
+}
+
 func (f *AssetFile) Stat() (os.FileInfo, error) {
 	return f, nil
 }
