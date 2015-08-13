@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-var bindatafile = "bindata.go"
+const bindatafile = "bindata.go"
 
 func isDebug(args []string) bool {
 	flagset := flag.NewFlagSet("", flag.ContinueOnError)
@@ -29,13 +29,6 @@ func isDebug(args []string) bool {
 }
 
 func main() {
-	debug := isDebug(os.Args[1:])
-	var outputFile string
-	flag.StringVar(&outputFile, "o", outputFile, "Optional name of the output file to be generated.")
-	flag.Parse()
-	if outputFile != ""{
-		bindatafile = outputFile
-	}
 	if _, err := exec.LookPath("go-bindata"); err != nil {
 		fmt.Println("Cannot find go-bindata executable in path")
 		fmt.Println("Maybe you need: go get github.com/elazarl/go-bindata-assetfs/...")
@@ -58,6 +51,7 @@ func main() {
 		fmt.Fprintln(os.Stderr, "Cannot write 'bindata_assetfs.go'", err)
 		return
 	}
+	debug := isDebug(os.Args[1:])
 	r := bufio.NewReader(in)
 	done := false
 	for line, isPrefix, err := r.ReadLine(); err == nil; line, isPrefix, err = r.ReadLine() {
