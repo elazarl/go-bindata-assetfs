@@ -33,7 +33,7 @@ func getBinDataFile() string {
 		}
 	}
 
-	return "bindatafile.go"
+	return "bindata.go"
 }
 
 func main() {
