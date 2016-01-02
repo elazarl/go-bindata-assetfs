@@ -10,8 +10,6 @@ import (
 	"strings"
 )
 
-const bindatafile = "bindata.go"
-
 func isDebug(args []string) bool {
 	flagset := flag.NewFlagSet("", flag.ContinueOnError)
 	debug := flagset.Bool("debug", false, "")
@@ -28,17 +26,34 @@ func isDebug(args []string) bool {
 	return *debug
 }
 
+func getBinDataFile() string {
+	for i, value := range os.Args {
+		if value == "-o" {
+			return os.Args[i+1]
+		}
+	}
+
+	return "bindatafile.go"
+}
+
 func main() {
-	if _, err := exec.LookPath("go-bindata"); err != nil {
+	path, err := exec.LookPath("go-bindata")
+	if err != nil {
 		fmt.Println("Cannot find go-bindata executable in path")
 		fmt.Println("Maybe you need: go get github.com/elazarl/go-bindata-assetfs/...")
 		os.Exit(1)
 	}
-	cmd := exec.Command("go-bindata", os.Args[1:]...)
+	cmd := exec.Command(path, os.Args[1:]...)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
+		fmt.Println("Error: go-bindata: ", err)
+		os.Exit(1)
+	}
+	bindatafile := getBinDataFile()
+	if _, err := os.Stat(bindatafile); os.IsNotExist(err) {
+		fmt.Println("Error: cannot find output file from go-bindata")
 		os.Exit(1)
 	}
 	in, err := os.Open(bindatafile)
