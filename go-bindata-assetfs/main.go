@@ -67,7 +67,6 @@ func main() {
 				fmt.Fprintln(out, "\t\"net/http\"")
 			} else {
 				fmt.Fprintln(out, "\t\"github.com/elazarl/go-bindata-assetfs\"")
-				fmt.Fprintln(out, "\t\"os\"")
 			}
 			done = true
 		}
