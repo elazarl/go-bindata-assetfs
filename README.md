@@ -37,10 +37,19 @@ You can always just run the `go-bindata` tool, and then
 
 use
 
-     import "github.com/elazarl/go-bindata-assetfs"
-     ...
-     http.Handle("/",
-        http.FileServer(
-        &assetfs.AssetFS{Asset: Asset, AssetDir: AssetDir, AssetInfo: AssetInfo, Prefix: "data"}))
+```go
+	import "github.com/elazarl/go-bindata-assetfs"
 
+	custom404, _ := Asset("404.html")
+	http.Handle("/",
+		http.FileServer(
+			&assetfs.AssetFS{
+				Asset: Asset,
+				AssetDir: AssetDir,
+				AssetInfo: AssetInfo,
+				Prefix: "data",
+				Custom404: custom404,
+			},
+		)
+```
 to serve files embedded from the `data` directory.
