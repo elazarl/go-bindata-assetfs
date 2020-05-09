@@ -37,10 +37,26 @@ You can always just run the `go-bindata` tool, and then
 
 use
 
-     import "github.com/elazarl/go-bindata-assetfs"
-     ...
-     http.Handle("/",
-        http.FileServer(
-        &assetfs.AssetFS{Asset: Asset, AssetDir: AssetDir, AssetInfo: AssetInfo, Prefix: "data"}))
+```go
+import "github.com/elazarl/go-bindata-assetfs"
+...
+http.Handle("/",
+http.FileServer(
+&assetfs.AssetFS{Asset: Asset, AssetDir: AssetDir, AssetInfo: AssetInfo, Prefix: "data"}))
+```
 
 to serve files embedded from the `data` directory.
+
+## SPA applications
+
+For single page applications you can use `Fallback: "index.html"` in AssetFS context, so if route doesn't match the pattern it will fallback to file specified.
+
+example
+
+```go
+import "github.com/elazarl/go-bindata-assetfs"
+...
+http.Handle("/",
+http.FileServer(
+&assetfs.AssetFS{Asset: Asset, AssetDir: AssetDir, AssetInfo: AssetInfo, Prefix: "data", Fallback: "index.html"}))
+```
