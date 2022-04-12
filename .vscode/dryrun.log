@@ -1,0 +1,4 @@
+make: Entering directory `/Users/josefgasewicz/Contrib/go-bindata-assetfs'
+go build CGO_ENABLED=0 -ldflags "-X main.Version=1.0.1 -X main.Build=`git rev-parse HEAD`" -o go-bindata-assetfs
+make: Leaving directory `/Users/josefgasewicz/Contrib/go-bindata-assetfs'
+ 
