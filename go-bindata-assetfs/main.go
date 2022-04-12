@@ -111,6 +111,10 @@ func assetFS() *assetfs.AssetFS {
 	panic("unreachable")
 }`)
 	}
+	fmt.Fprintln(out, `
+func AssetFS() *assetfs.AssetFS {
+	return assetFS()
+}`)
 	// Close files BEFORE remove calls (don't use defer).
 	in.Close()
 	out.Close()
