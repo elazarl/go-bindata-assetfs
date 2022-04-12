@@ -116,6 +116,7 @@ func AssetDIR(dir string) http.FileSystem {
 	}
 	panic("No asset with name " + dir)
 }`)
+
 	} else {
 		fmt.Fprintln(out, `
 func assetFS() *assetfs.AssetFS {
@@ -138,6 +139,7 @@ func AssetDIR(dir string) *assetfs.AssetFS {
 	}
 	panic("No asset with name " + dir)
 }`)
+    
 	}
 	// Close files BEFORE remove calls (don't use defer).
 	in.Close()
