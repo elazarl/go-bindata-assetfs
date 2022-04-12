@@ -102,6 +102,10 @@ func assetFS() http.FileSystem {
 	}
 	panic("unreachable")
 }`)
+		fmt.Fprintln(out, `
+func AssetFS() http.FileSystem {
+	return assetFS()
+}`)
 	} else {
 		fmt.Fprintln(out, `
 func assetFS() *assetfs.AssetFS {
@@ -109,6 +113,10 @@ func assetFS() *assetfs.AssetFS {
 		return &assetfs.AssetFS{Asset: Asset, AssetDir: AssetDir, AssetInfo: AssetInfo, Prefix: k}
 	}
 	panic("unreachable")
+}`)
+		fmt.Fprintln(out, `
+func AssetFS() *assetfs.AssetFS {
+	return assetFS()
 }`)
 	}
 	// Close files BEFORE remove calls (don't use defer).
