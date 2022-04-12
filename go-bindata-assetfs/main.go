@@ -102,6 +102,20 @@ func assetFS() http.FileSystem {
 	}
 	panic("unreachable")
 }`)
+		fmt.Fprintln(out, `
+func AssetFS() http.FileSystem {
+	return assetFS()
+}`)
+		fmt.Fprintln(out, `
+// AssetDIR similiar to assetFS() but requires a directory name
+func AssetDIR(dir string) http.FileSystem {
+	for k := range _bintree.Children {
+		if k == dir {
+			return http.Dir(k)
+		}
+	}
+	panic("No asset with name " + dir)
+}`)
 	} else {
 		fmt.Fprintln(out, `
 func assetFS() *assetfs.AssetFS {
@@ -109,6 +123,20 @@ func assetFS() *assetfs.AssetFS {
 		return &assetfs.AssetFS{Asset: Asset, AssetDir: AssetDir, AssetInfo: AssetInfo, Prefix: k}
 	}
 	panic("unreachable")
+}`)
+		fmt.Fprintln(out, `
+func AssetFS() *assetfs.AssetFS {
+	return assetFS()
+}`)
+		fmt.Fprintln(out, `
+// AssetDIR similiar to assetFS() but requires a directory name
+func AssetDIR(dir string) *assetfs.AssetFS {
+	for k := range _bintree.Children {
+		if k == dir {
+			return &assetfs.AssetFS{Asset: Asset, AssetDir: AssetDir, AssetInfo: AssetInfo, Prefix: k}
+		}
+	}
+	panic("No asset with name " + dir)
 }`)
 	}
 	// Close files BEFORE remove calls (don't use defer).
