@@ -60,3 +60,25 @@ http.Handle("/",
 http.FileServer(
 &assetfs.AssetFS{Asset: Asset, AssetDir: AssetDir, AssetInfo: AssetInfo, Prefix: "data", Fallback: "index.html"}))
 ```
+
+## Specifying multiple directories
+
+To generate binary data from calling the `go-bindata-assetfs` cmd when declaring multiple directories, then you can use the `AssetDIR(dir string)` function. For example, running the following command inside a directory contaning a `dist/..` & `public/...` directories:
+
+```
+$ go-bindata-assetfs dist/... public/...
+```
+
+Our server code might look like this using the `AssetDIR(dir string)` function
+
+```go
+func main() {
+	r := mux.NewRouter() // Example uses "github.com/gorilla/mux"
+    // Here we want to serve static content from 2 directories
+	r.PathPrefix("/dist").Handler(http.StripPrefix("/dist", http.FileServer(AssetDIR("dist"))))
+	r.PathPrefix("/public").Handler(http.StripPrefix("/public", http.FileServer(AssetDIR("public"))))
+    // rest of server code...
+	server := &http.Server{ Addr:    ":7777", Handler: r, }
+	server.ListenAndServe()
+}
+```
