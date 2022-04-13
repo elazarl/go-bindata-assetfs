@@ -63,7 +63,7 @@ http.FileServer(
 
 ## Specifying multiple directories
 
-To generate binary data from calling the `go-bindata-assetfs` cmd when declaring multiple directories, then you can use the `AssetDIR(dir string)` function. For example, running the following command inside a directory containg a `dist/..` & `public/...` directories:
+To generate binary data from calling the `go-bindata-assetfs` cmd when declaring multiple directories, then you can use the `AssetDIR(dir string)` function. For example, running the following command inside a directory contaning a `dist/..` & `public/...` directories:
 
 ```
 $ go-bindata-assetfs dist/... public/...
