@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 )
 
@@ -43,6 +44,25 @@ func getBinDataFile() (*os.File, *os.File, []string, error) {
 	tempFile, err := ioutil.TempFile(os.TempDir(), "")
 	if err != nil {
 		return &os.File{}, &os.File{}, nil, err
+	}
+
+	stat, err := os.Lstat(outputLoc)
+	if err != nil {
+		if !os.IsNotExist(err) {
+			return &os.File{}, &os.File{}, nil, err
+		}
+
+		// File does not exist. This is fine, just make
+		// sure the directory it is to be in exists.
+		dir, _ := filepath.Split(outputLoc)
+		if dir != "" {
+			if err = os.MkdirAll(dir, 0744); err != nil {
+				return &os.File{}, &os.File{}, nil, fmt.Errorf("create output directory: %v", err)
+			}
+		}
+	}
+	if stat != nil && stat.IsDir() {
+		return &os.File{}, &os.File{}, nil, fmt.Errorf("output loc is a directory")
 	}
 
 	outputFile, err := os.Create(outputLoc)
