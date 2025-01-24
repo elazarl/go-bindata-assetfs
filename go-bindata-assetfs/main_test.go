@@ -5,6 +5,7 @@ import "regexp"
 import "os"
 
 var temp_pattern *regexp.Regexp = regexp.MustCompile(`^/tmp/`)
+var exec_pattern *regexp.Regexp = regexp.MustCompile(`go-bindata`)
 
 func TestConfigParseEmpty(t *testing.T) {
 	c, err := parseConfig([]string{})
@@ -19,6 +20,9 @@ func TestConfigParseEmpty(t *testing.T) {
 
 	if c.Debug != false {
 		t.Fatalf("Debug should not default to true")
+	}
+	if !exec_pattern.MatchString(c.ExecPath) {
+		t.Fatalf("ExecPath should point to go-bindata binary, got %s", c.ExecPath)
 	}
 	if c.OutPath != "bindata.go" {
 		t.Fatalf("OutPath should default to bindata.go, got %s", c.OutPath)
@@ -42,6 +46,9 @@ func TestConfigParseDebug(t *testing.T) {
 	if c.Debug != true {
 		t.Fatalf("Debug was requested")
 	}
+	if !exec_pattern.MatchString(c.ExecPath) {
+		t.Fatalf("ExecPath should point to go-bindata binary, got %s", c.ExecPath)
+	}
 	if c.OutPath != "bindata.go" {
 		t.Fatalf("OutPath should default to bindata.go, got %s", c.OutPath)
 	}
@@ -63,6 +70,9 @@ func TestConfigParseArgs(t *testing.T) {
 
 	if c.Debug != true {
 		t.Fatalf("Debug was requested")
+	}
+	if !exec_pattern.MatchString(c.ExecPath) {
+		t.Fatalf("ExecPath should point to go-bindata binary, got %s", c.ExecPath)
 	}
 	if c.OutPath != "bindata.go" {
 		t.Fatalf("OutPath should default to bindata.go, got %s", c.OutPath)
@@ -87,6 +97,9 @@ func TestConfigParsePaths(t *testing.T) {
 
 	if c.Debug != false {
 		t.Fatalf("Debug was not requested")
+	}
+	if !exec_pattern.MatchString(c.ExecPath) {
+		t.Fatalf("ExecPath should point to go-bindata binary, got %s", c.ExecPath)
 	}
 	if c.OutPath != "outfile.go" {
 		t.Fatalf("OutPath should be outfile.go, got %s", c.OutPath)

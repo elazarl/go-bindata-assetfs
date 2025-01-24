@@ -14,6 +14,8 @@ import (
 type Config struct {
 	// Do not embed assets, just structure
 	Debug bool
+	// Path to go-bindata executable
+	ExecPath string
 	// Path to temporary file produced by go-bindata (default: random file in OS tempdir)
 	TempPath string
 	// Final output path (default: bindata.go)
@@ -31,10 +33,19 @@ type Config struct {
 func parseConfig(args []string) (Config, error) {
 	c := Config{
 		Debug:    false,
+		ExecPath: "",
 		TempPath: "",
 		OutPath:  "bindata.go",
 		Args:     []string{},
 	}
+
+	path, err := exec.LookPath("go-bindata")
+	if err != nil {
+		fmt.Println("Cannot find go-bindata executable in path")
+		fmt.Println("Maybe you need: go get github.com/elazarl/go-bindata-assetfs/...")
+		return c, err
+	}
+	c.ExecPath = path
 
 	// Do this dumb manually-tracked for loop so we can do skips.
 	i := 0
@@ -116,18 +127,19 @@ func getBinDataFile() (*os.File, *os.File, []string, error) {
 }
 
 func main() {
-	path, err := exec.LookPath("go-bindata")
+	c, err := parseConfig(os.Args[1:])
 	if err != nil {
-		fmt.Println("Cannot find go-bindata executable in path")
-		fmt.Println("Maybe you need: go get github.com/elazarl/go-bindata-assetfs/...")
+		fmt.Fprintln(os.Stderr, "Error: ", err)
 		os.Exit(1)
 	}
+	defer os.Remove(c.TempPath)
+
 	out, in, args, err := getBinDataFile()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "Error: cannot create temporary file", err)
 		os.Exit(1)
 	}
-	cmd := exec.Command(path, args...)
+	cmd := exec.Command(c.ExecPath, args...)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
