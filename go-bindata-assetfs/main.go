@@ -11,6 +11,67 @@ import (
 	"strings"
 )
 
+type Config struct {
+	// Do not embed assets, just structure
+	Debug bool
+	// Path to temporary file produced by go-bindata (default: random file in OS tempdir)
+	TempPath string
+	// Final output path (default: bindata.go)
+	OutPath string
+	// Remaining misc args to pass through to go-bindata
+	Args []string
+}
+
+// If this function succeeds, the caller is responsible for deleting the
+// temporary file at c.TempPath. This usually makes sense to do with a:
+//
+//	defer os.Remove(c.TempPath)
+//
+// right after checking for errors.
+func parseConfig(args []string) (Config, error) {
+	c := Config{
+		Debug:    false,
+		TempPath: "",
+		OutPath:  "bindata.go",
+		Args:     []string{},
+	}
+
+	// Do this dumb manually-tracked for loop so we can do skips.
+	i := 0
+	for {
+		if i >= len(args) {
+			break
+		}
+		arg := args[i]
+
+		if arg == "-debug" {
+			c.Debug = true
+		} else if arg == "-t" && i+1 < len(args) {
+			c.TempPath = args[i+1]
+			i = i + 1
+		} else if arg == "-o" && i+1 < len(args) {
+			c.OutPath = args[i+1]
+			i = i + 1
+		} else {
+			c.Args = append(c.Args, arg)
+		}
+		i = i + 1
+	}
+
+	// We don't hold onto the original file handle, as we can expect
+	// go-bindata to replace it. We do establish the existence of the
+	// file on-disk, though, to avoid collisions.
+	if c.TempPath == "" {
+		f, err := os.CreateTemp("", "go-bindata-assetfs")
+		if err != nil {
+			return c, err
+		}
+		c.TempPath = f.Name()
+		f.Close()
+	}
+	return c, nil
+}
+
 func isDebug(args []string) bool {
 	flagset := flag.NewFlagSet("", flag.ContinueOnError)
 	debug := flagset.Bool("debug", false, "")
