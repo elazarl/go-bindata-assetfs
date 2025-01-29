@@ -89,22 +89,6 @@ func parseConfig(args []string) (Config, error) {
 	return c, nil
 }
 
-func isDebug(args []string) bool {
-	flagset := flag.NewFlagSet("", flag.ContinueOnError)
-	debug := flagset.Bool("debug", false, "")
-	debugArgs := make([]string, 0)
-	for _, arg := range args {
-		if strings.HasPrefix(arg, "-debug") {
-			debugArgs = append(debugArgs, arg)
-		}
-	}
-	flagset.Parse(debugArgs)
-	if debug == nil {
-		return false
-	}
-	return *debug
-}
-
 func getBinDataFile() (*os.File, *os.File, []string, error) {
 	bindataArgs := make([]string, 0)
 	outputLoc := "bindata.go"
@@ -153,7 +137,6 @@ func main() {
 		fmt.Fprintln(os.Stderr, "Error: go-bindata: ", err)
 		os.Exit(1)
 	}
-	debug := isDebug(os.Args[1:])
 	r := bufio.NewReader(in)
 	done := false
 	for line, isPrefix, err := r.ReadLine(); err == nil; line, isPrefix, err = r.ReadLine() {
@@ -165,7 +148,7 @@ func main() {
 			return
 		}
 		if !done && !isPrefix && bytes.HasPrefix(line, []byte("import (")) {
-			if debug {
+			if c.Debug {
 				fmt.Fprintln(out, "\t\"net/http\"")
 			} else {
 				fmt.Fprintln(out, "\t\"github.com/elazarl/go-bindata-assetfs\"")
@@ -173,7 +156,7 @@ func main() {
 			done = true
 		}
 	}
-	if debug {
+	if c.Debug {
 		fmt.Fprintln(out, `
 func assetFS() http.FileSystem {
 	for k := range _bintree.Children {
