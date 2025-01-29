@@ -1,10 +1,13 @@
 package main
 
-import "testing"
-import "bufio"
-import "regexp"
-import "os"
-import "reflect"
+import (
+	"bufio"
+	"bytes"
+	"os"
+	"reflect"
+	"regexp"
+	"testing"
+)
 
 var temp_pattern *regexp.Regexp = regexp.MustCompile(`^/tmp/`)
 var exec_pattern *regexp.Regexp = regexp.MustCompile(`go-bindata`)
@@ -33,12 +36,12 @@ func helper(t *testing.T, tmp string, args []string) Config {
 
 func TestConfigParseEmpty(t *testing.T) {
 	c := helper(t, "", []string{})
-	expected := Config {
-		Debug: false,
+	expected := Config{
+		Debug:    false,
 		ExecPath: c.ExecPath,
 		TempPath: c.TempPath,
-		OutPath: "bindata.go",
-		Args: []string{"-o", c.TempPath},
+		OutPath:  "bindata.go",
+		Args:     []string{"-o", c.TempPath},
 	}
 	if !reflect.DeepEqual(c, expected) {
 		t.Fatalf("Expected %v, got %v", expected, c)
@@ -47,12 +50,12 @@ func TestConfigParseEmpty(t *testing.T) {
 
 func TestConfigParseDebug(t *testing.T) {
 	c := helper(t, "", []string{"-debug", "-debug", "-debug"})
-	expected := Config {
-		Debug: true,
+	expected := Config{
+		Debug:    true,
 		ExecPath: c.ExecPath,
 		TempPath: c.TempPath,
-		OutPath: "bindata.go",
-		Args: []string{"-o", c.TempPath, "-debug"},
+		OutPath:  "bindata.go",
+		Args:     []string{"-o", c.TempPath, "-debug"},
 	}
 	if !reflect.DeepEqual(c, expected) {
 		t.Fatalf("Expected %v, got %v", expected, c)
@@ -61,12 +64,12 @@ func TestConfigParseDebug(t *testing.T) {
 
 func TestConfigParseArgs(t *testing.T) {
 	c := helper(t, "", []string{"x", "y", "-debug", "z"})
-	expected := Config {
-		Debug: true,
+	expected := Config{
+		Debug:    true,
 		ExecPath: c.ExecPath,
 		TempPath: c.TempPath,
-		OutPath: "bindata.go",
-		Args: []string{"-o", c.TempPath, "-debug", "x", "y", "z" },
+		OutPath:  "bindata.go",
+		Args:     []string{"-o", c.TempPath, "-debug", "x", "y", "z"},
 	}
 	if !reflect.DeepEqual(c, expected) {
 		t.Fatalf("Expected %v, got %v", expected, c)
@@ -75,12 +78,12 @@ func TestConfigParseArgs(t *testing.T) {
 
 func TestConfigParsePaths(t *testing.T) {
 	c := helper(t, "tempfile.go", []string{"-t", "tempfile.go", "-o", "outfile.go"})
-	expected := Config {
-		Debug: false,
+	expected := Config{
+		Debug:    false,
 		ExecPath: c.ExecPath,
 		TempPath: "tempfile.go",
-		OutPath: "outfile.go",
-		Args: []string{"-o", "tempfile.go"},
+		OutPath:  "outfile.go",
+		Args:     []string{"-o", "tempfile.go"},
 	}
 	if !reflect.DeepEqual(c, expected) {
 		t.Fatalf("Expected %v, got %v", expected, c)
@@ -222,5 +225,18 @@ func AssetFS() http.FileSystem {
 `
 	if string(out) != expected {
 		t.Fatalf("Expected: %v\n\nGot: %v", expected, string(out))
+	}
+}
+
+func TestGenerate(t *testing.T) {
+	err := generate([]string{".", "-o", "outfile.go"})
+	if err != nil {
+		t.Fatalf("Generate failed: %v", err)
+	}
+	defer os.Remove("outfile.go")
+
+	out, err := os.ReadFile("outfile.go")
+	if !bytes.Contains(out, []byte(`	"github.com/elazarl/go-bindata-assetfs"`)) {
+		t.Fatalf("Outfile did not contain go-bindata-assetfs import")
 	}
 }

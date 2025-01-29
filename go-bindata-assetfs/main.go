@@ -164,7 +164,7 @@ func AssetFS() *assetfs.AssetFS {
 }
 
 func generate(args []string) error {
-	c, err := parseConfig(os.Args[1:])
+	c, err := parseConfig(args)
 	if err != nil {
 		return err
 	}
