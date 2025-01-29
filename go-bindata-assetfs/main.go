@@ -91,7 +91,6 @@ func parseConfig(args []string) (Config, error) {
 
 // Use go-bindata to output c.TempPath.
 func produceTempfile(c Config) error {
-	fmt.Fprintln(os.Stderr, "Args:", c.Args)
 	cmd := exec.Command(c.ExecPath, c.Args...)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
