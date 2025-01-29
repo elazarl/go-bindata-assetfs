@@ -80,6 +80,12 @@ func parseConfig(args []string) (Config, error) {
 		c.TempPath = f.Name()
 		f.Close()
 	}
+
+	// Polish up Args with stuff we pulled out/deduped earlier
+	if (c.Debug) {
+		c.Args = append(c.Args, "-debug")
+	}
+	c.Args = append(c.Args, "-o", c.TempPath)
 	return c, nil
 }
 
@@ -139,7 +145,7 @@ func main() {
 		fmt.Fprintln(os.Stderr, "Error: cannot create temporary file", err)
 		os.Exit(1)
 	}
-	cmd := exec.Command(c.ExecPath, args...)
+	cmd := exec.Command(c.ExecPath, c.Args...)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr

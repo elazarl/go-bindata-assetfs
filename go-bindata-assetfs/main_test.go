@@ -37,7 +37,7 @@ func TestConfigParseEmpty(t *testing.T) {
 		ExecPath: c.ExecPath,
 		TempPath: c.TempPath,
 		OutPath: "bindata.go",
-		Args: []string{},
+		Args: []string{"-o", c.TempPath},
 	}
 	if !reflect.DeepEqual(c, expected) {
 		t.Fatalf("Expected %v, got %v", expected, c)
@@ -51,7 +51,7 @@ func TestConfigParseDebug(t *testing.T) {
 		ExecPath: c.ExecPath,
 		TempPath: c.TempPath,
 		OutPath: "bindata.go",
-		Args: []string{},
+		Args: []string{"-debug", "-o", c.TempPath},
 	}
 	if !reflect.DeepEqual(c, expected) {
 		t.Fatalf("Expected %v, got %v", expected, c)
@@ -65,7 +65,7 @@ func TestConfigParseArgs(t *testing.T) {
 		ExecPath: c.ExecPath,
 		TempPath: c.TempPath,
 		OutPath: "bindata.go",
-		Args: []string{"x", "y", "z"},
+		Args: []string{"x", "y", "z", "-debug", "-o", c.TempPath},
 	}
 	if !reflect.DeepEqual(c, expected) {
 		t.Fatalf("Expected %v, got %v", expected, c)
@@ -79,7 +79,7 @@ func TestConfigParsePaths(t *testing.T) {
 		ExecPath: c.ExecPath,
 		TempPath: "tempfile.go",
 		OutPath: "outfile.go",
-		Args: []string{},
+		Args: []string{"-o", "tempfile.go"},
 	}
 	if !reflect.DeepEqual(c, expected) {
 		t.Fatalf("Expected %v, got %v", expected, c)
