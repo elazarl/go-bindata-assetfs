@@ -142,8 +142,8 @@ func assetFS() http.FileSystem {
 		return http.Dir(k)
 	}
 	panic("unreachable")
-}`)
-		fmt.Fprintln(out, `
+}
+
 func AssetFS() http.FileSystem {
 	return assetFS()
 }`)
@@ -154,8 +154,8 @@ func assetFS() *assetfs.AssetFS {
 		return &assetfs.AssetFS{Asset: Asset, AssetDir: AssetDir, AssetInfo: AssetInfo, Prefix: k}
 	}
 	panic("unreachable")
-}`)
-		fmt.Fprintln(out, `
+}
+
 func AssetFS() *assetfs.AssetFS {
 	return assetFS()
 }`)

@@ -112,3 +112,115 @@ func TestProduceTempfile(t *testing.T) {
 		t.Fatalf("Expected %v, got %v", expected, line)
 	}
 }
+
+func TestProduceOutfile(t *testing.T) {
+	c := helper(t, "", []string{".", "-o", "an-output.go"})
+	err := os.WriteFile(c.TempPath, []byte(`
+// Imagine, just imagine, that this file was produced by go-bindata.
+
+import (
+	"foo"
+	"bar"
+)
+
+func example() {
+}
+`), 0644)
+	if err != nil {
+		t.Fatalf("Could not write to %s, %v:", c.TempPath, err)
+	}
+	defer os.Remove(c.TempPath)
+
+	err = produceOutfile(c)
+	if err != nil {
+		t.Fatalf("produceOutfile failed: %v", err)
+	}
+	defer os.Remove(c.OutPath)
+
+	out, err := os.ReadFile(c.OutPath)
+	if err != nil {
+		t.Fatalf("Could not read from %s, %v:", c.OutPath, err)
+	}
+	expected := `
+// Imagine, just imagine, that this file was produced by go-bindata.
+
+import (
+	"github.com/elazarl/go-bindata-assetfs"
+	"foo"
+	"bar"
+)
+
+func example() {
+}
+
+func assetFS() *assetfs.AssetFS {
+	for k := range _bintree.Children {
+		return &assetfs.AssetFS{Asset: Asset, AssetDir: AssetDir, AssetInfo: AssetInfo, Prefix: k}
+	}
+	panic("unreachable")
+}
+
+func AssetFS() *assetfs.AssetFS {
+	return assetFS()
+}
+`
+	if string(out) != expected {
+		t.Fatalf("Expected: %v\n\nGot: %v", expected, string(out))
+	}
+}
+
+func TestProduceOutfileDebug(t *testing.T) {
+	c := helper(t, "", []string{".", "-debug", "-o", "an-output.go"})
+	err := os.WriteFile(c.TempPath, []byte(`
+// Imagine, just imagine, that this file was produced by go-bindata.
+
+import (
+	"foo"
+	"bar"
+)
+
+func example() {
+}
+`), 0644)
+	if err != nil {
+		t.Fatalf("Could not write to %s, %v:", c.TempPath, err)
+	}
+	defer os.Remove(c.TempPath)
+
+	err = produceOutfile(c)
+	if err != nil {
+		t.Fatalf("produceOutfile failed: %v", err)
+	}
+	defer os.Remove(c.OutPath)
+
+	out, err := os.ReadFile(c.OutPath)
+	if err != nil {
+		t.Fatalf("Could not read from %s, %v:", c.OutPath, err)
+	}
+	expected := `
+// Imagine, just imagine, that this file was produced by go-bindata.
+
+import (
+	"net/http"
+	"foo"
+	"bar"
+)
+
+func example() {
+}
+
+func assetFS() http.FileSystem {
+	for k := range _bintree.Children {
+		return http.Dir(k)
+	}
+	panic("unreachable")
+}
+
+func AssetFS() http.FileSystem {
+	return assetFS()
+}
+`
+	if string(out) != expected {
+		t.Fatalf("Expected: %v\n\nGot: %v", expected, string(out))
+	}
+}
