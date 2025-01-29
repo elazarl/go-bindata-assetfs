@@ -3,12 +3,9 @@ package main
 import (
 	"bufio"
 	"bytes"
-	"flag"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
-	"strings"
 )
 
 type Config struct {
@@ -38,6 +35,7 @@ func parseConfig(args []string) (Config, error) {
 		OutPath:  "bindata.go",
 		Args:     []string{},
 	}
+	extra_args := []string{}
 
 	path, err := exec.LookPath("go-bindata")
 	if err != nil {
@@ -64,7 +62,7 @@ func parseConfig(args []string) (Config, error) {
 			c.OutPath = args[i+1]
 			i = i + 1
 		} else {
-			c.Args = append(c.Args, arg)
+			extra_args = append(extra_args, arg)
 		}
 		i = i + 1
 	}
@@ -82,38 +80,12 @@ func parseConfig(args []string) (Config, error) {
 	}
 
 	// Polish up Args with stuff we pulled out/deduped earlier
+	c.Args = []string{"-o", c.TempPath}
 	if (c.Debug) {
 		c.Args = append(c.Args, "-debug")
 	}
-	c.Args = append(c.Args, "-o", c.TempPath)
+	c.Args = append(c.Args, extra_args...)
 	return c, nil
-}
-
-func getBinDataFile() (*os.File, *os.File, []string, error) {
-	bindataArgs := make([]string, 0)
-	outputLoc := "bindata.go"
-
-	for i := 1; i < len(os.Args); i++ {
-		if os.Args[i] == "-o" {
-			outputLoc = os.Args[i+1]
-			i++
-		} else {
-			bindataArgs = append(bindataArgs, os.Args[i])
-		}
-	}
-
-	tempFile, err := ioutil.TempFile(os.TempDir(), "")
-	if err != nil {
-		return &os.File{}, &os.File{}, nil, err
-	}
-
-	outputFile, err := os.Create(outputLoc)
-	if err != nil {
-		return &os.File{}, &os.File{}, nil, err
-	}
-
-	bindataArgs = append([]string{"-o", tempFile.Name()}, bindataArgs...)
-	return outputFile, tempFile, bindataArgs, nil
 }
 
 func main() {
@@ -124,11 +96,19 @@ func main() {
 	}
 	defer os.Remove(c.TempPath)
 
-	out, in, args, err := getBinDataFile()
+	in, err := os.Create(c.TempPath)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "Error: cannot create temporary file", err)
 		os.Exit(1)
 	}
+
+	out, err := os.Create(c.OutPath)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "Error: cannot create output file", err)
+		os.Exit(1)
+	}
+
+	fmt.Fprintln(os.Stderr, "Args:", c.Args)
 	cmd := exec.Command(c.ExecPath, c.Args...)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout

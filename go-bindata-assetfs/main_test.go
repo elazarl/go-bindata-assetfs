@@ -51,7 +51,7 @@ func TestConfigParseDebug(t *testing.T) {
 		ExecPath: c.ExecPath,
 		TempPath: c.TempPath,
 		OutPath: "bindata.go",
-		Args: []string{"-debug", "-o", c.TempPath},
+		Args: []string{"-o", c.TempPath, "-debug"},
 	}
 	if !reflect.DeepEqual(c, expected) {
 		t.Fatalf("Expected %v, got %v", expected, c)
@@ -65,7 +65,7 @@ func TestConfigParseArgs(t *testing.T) {
 		ExecPath: c.ExecPath,
 		TempPath: c.TempPath,
 		OutPath: "bindata.go",
-		Args: []string{"x", "y", "z", "-debug", "-o", c.TempPath},
+		Args: []string{"-o", c.TempPath, "-debug", "x", "y", "z" },
 	}
 	if !reflect.DeepEqual(c, expected) {
 		t.Fatalf("Expected %v, got %v", expected, c)
