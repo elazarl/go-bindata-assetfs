@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
+	"log"
 	"os"
 	"os/exec"
 )
@@ -88,35 +89,35 @@ func parseConfig(args []string) (Config, error) {
 	return c, nil
 }
 
-func main() {
-	c, err := parseConfig(os.Args[1:])
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "Error: ", err)
-		os.Exit(1)
-	}
-	defer os.Remove(c.TempPath)
-
-	in, err := os.Create(c.TempPath)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "Error: cannot create temporary file", err)
-		os.Exit(1)
-	}
-
-	out, err := os.Create(c.OutPath)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "Error: cannot create output file", err)
-		os.Exit(1)
-	}
-
+// Use go-bindata to output c.TempPath.
+func produceTempfile(c Config) error {
 	fmt.Fprintln(os.Stderr, "Args:", c.Args)
 	cmd := exec.Command(c.ExecPath, c.Args...)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	if err := cmd.Run(); err != nil {
-		fmt.Fprintln(os.Stderr, "Error: go-bindata: ", err)
-		os.Exit(1)
+	err := cmd.Run()
+	if err != nil {
+		return fmt.Errorf("go-bindata: %v", err)
 	}
+	return nil
+}
+
+
+// Read c.TempPath, and write modified version to c.OutPath.
+func produceOutfile(c Config) error {
+	in, err := os.Open(c.TempPath)
+	if err != nil {
+		return fmt.Errorf("cannot read temporary file: %v", err)
+	}
+	defer in.Close()
+
+	out, err := os.Create(c.OutPath)
+	if err != nil {
+		return fmt.Errorf("cannot create output file: %v", err)
+	}
+	defer out.Close()
+
 	r := bufio.NewReader(in)
 	done := false
 	for line, isPrefix, err := r.ReadLine(); err == nil; line, isPrefix, err = r.ReadLine() {
@@ -124,8 +125,7 @@ func main() {
 			line = append(line, '\n')
 		}
 		if _, err := out.Write(line); err != nil {
-			fmt.Fprintln(os.Stderr, "Cannot write to ", out.Name(), err)
-			return
+			return fmt.Errorf("Cannot write to %s: %v", out.Name(), err)
 		}
 		if !done && !isPrefix && bytes.HasPrefix(line, []byte("import (")) {
 			if c.Debug {
@@ -161,10 +161,27 @@ func AssetFS() *assetfs.AssetFS {
 	return assetFS()
 }`)
 	}
-	// Close files BEFORE remove calls (don't use defer).
-	in.Close()
-	out.Close()
-	if err := os.Remove(in.Name()); err != nil {
-		fmt.Fprintln(os.Stderr, "Cannot remove", in.Name(), err)
+	return nil
+}
+
+func generate(args []string) error {
+	c, err := parseConfig(os.Args[1:])
+	if err != nil {
+		return err
+	}
+	defer os.Remove(c.TempPath)
+
+	err = produceTempfile(c)
+	if err != nil {
+		return err
+	}
+
+	return produceOutfile(c)
+}
+
+func main() {
+	err := generate(os.Args[1:])
+	if err != nil {
+		log.Fatalf("Error: %v", err)
 	}
 }
