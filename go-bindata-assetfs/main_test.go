@@ -5,12 +5,9 @@ import (
 	"bytes"
 	"os"
 	"reflect"
-	"regexp"
+	"strings"
 	"testing"
 )
-
-var temp_pattern *regexp.Regexp = regexp.MustCompile(`^/tmp/`)
-var exec_pattern *regexp.Regexp = regexp.MustCompile(`go-bindata`)
 
 func helper(t *testing.T, tmp string, args []string) Config {
 	c, err := parseConfig(args)
@@ -22,13 +19,13 @@ func helper(t *testing.T, tmp string, args []string) Config {
 		if c.TempPath != tmp {
 			t.Fatalf("Expected c.TempFile to be %s, got %s", tmp, c.TempPath)
 		}
-	} else if temp_pattern.MatchString(c.TempPath) {
+	} else if strings.HasPrefix(c.TempPath, os.TempDir()) {
 		os.Remove(c.TempPath)
 	} else {
 		t.Fatalf("TempPath should live in system temp directory, got %s", c.TempPath)
 	}
 
-	if !exec_pattern.MatchString(c.ExecPath) {
+	if !strings.HasSuffix(c.ExecPath, "go-bindata") {
 		t.Fatalf("ExecPath should point to go-bindata binary, got %s", c.ExecPath)
 	}
 	return c
